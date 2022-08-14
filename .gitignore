@@ -1,1 +1,4 @@
 openaiapikey.txt
+/output/**
+/gpt3_logs/**
+/data/**

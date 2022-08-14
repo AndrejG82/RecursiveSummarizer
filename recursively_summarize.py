@@ -4,6 +4,16 @@ from time import time,sleep
 import textwrap
 import re
 
+# input constants
+input_file = 'data/input.txt'
+prompt_file = 'prompt_SI.txt'
+lenght = 2000
+gpt3_engine = 'text-davinci-002'
+logs_folder = 'gpt3_logs'
+output_folder = 'output'
+output_group = 'test'
+# ---------------
+
 
 def open_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as infile:
@@ -18,7 +28,7 @@ def save_file(content, filepath):
         outfile.write(content)
 
 
-def gpt3_completion(prompt, engine='text-davinci-002', temp=0.6, top_p=1.0, tokens=2000, freq_pen=0.25, pres_pen=0.0, stop=['<<END>>']):
+def gpt3_completion(prompt, engine=gpt3_engine, temp=0.6, top_p=1.0, tokens=2000, freq_pen=0.25, pres_pen=0.0, stop=['<<END>>']):
     max_retry = 5
     retry = 0
     while True:
@@ -34,8 +44,8 @@ def gpt3_completion(prompt, engine='text-davinci-002', temp=0.6, top_p=1.0, toke
                 stop=stop)
             text = response['choices'][0]['text'].strip()
             text = re.sub('\s+', ' ', text)
-            filename = '%s_gpt3.txt' % time()
-            with open('gpt3_logs/%s' % filename, 'w') as outfile:
+            filename = '%s_%s_gpt3.txt' % (output_group,time())
+            with open('%s/%s' % (logs_folder,filename), 'w') as outfile:
                 outfile.write('PROMPT:\n\n' + prompt + '\n\n==========\n\nRESPONSE:\n\n' + text)
             return text
         except Exception as oops:
@@ -47,15 +57,15 @@ def gpt3_completion(prompt, engine='text-davinci-002', temp=0.6, top_p=1.0, toke
 
 
 if __name__ == '__main__':
-    alltext = open_file('input.txt')
-    chunks = textwrap.wrap(alltext, 2000)
+    alltext = open_file(input_file)
+    chunks = textwrap.wrap(alltext, lenght)
     result = list()
     count = 0
     for chunk in chunks:
         count = count + 1
-        prompt = open_file('prompt.txt').replace('<<SUMMARY>>', chunk)
-        prompt = prompt.encode(encoding='ASCII',errors='ignore').decode()
+        prompt = open_file(prompt_file).replace('<<SUMMARY>>', chunk)
+        prompt = prompt.encode(encoding='UTF8',errors='ignore').decode()
         summary = gpt3_completion(prompt)
         print('\n\n\n', count, 'of', len(chunks), ' - ', summary)
         result.append(summary)
-    save_file('\n\n'.join(result), 'output_%s.txt' % time())
+    save_file('\n\n'.join(result), '%s/output_%s_%s.txt' % ( output_folder, output_group, time()))
